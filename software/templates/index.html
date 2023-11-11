@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Servo Control</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Servo Control</h1>
+    <div>
+        <h2>Base (Servo 0)</h2>
+        <input type="range" id="baseRange" min="0" max="180">
+        <span id="baseValue">90</span>
+    </div>
+    <div>
+        <h2>Waist (Servo 1)</h2>
+        <input type="range" id="waistRange" min="0" max="180">
+        <span id="waistValue">90</span>
+    </div>
+    <div>
+        <h2>Arm (Servo 2)</h2>
+        <input type="range" id="armRange" min="0" max="180">
+        <span id="armValue">90</span>
+    </div>
+    <button id="moveButton">Move Servos</button>
+    <br>
+    <h2>Live Video Feed</h2>
+    <video id="video" width="640" height="480" autoplay playsinline muted></video>
+    <script>
+        $(document).ready(function () {
+            function updateServoValue(servoId) {
+                const rangeId = `#${servoId}Range`;
+                const valueId = `#${servoId}Value`;
+                const range = $(rangeId);
+                const value = $(valueId);
+                value.text(range.val());
+            }
+
+            $("#baseRange").on('input', function () {
+                updateServoValue("base");
+            });
+
+            $("#waistRange").on('input', function () {
+                updateServoValue("waist");
+            });
+
+            $("#armRange").on('input', function () {
+                updateServoValue("arm");
+            });
+
+            $("#moveButton").click(function () {
+                const baseAngle = $("#baseRange").val();
+                const waistAngle = $("#waistRange").val();
+                const armAngle = $("#armRange").val();
+                $.post("/move_servo", JSON.stringify({
+                    "servo": 0,
+                    "angle": baseAngle
+                }), function () {
+                    $.post("/move_servo", JSON.stringify({
+                        "servo": 1,
+                        "angle": waistAngle
+                    }), function () {
+                        $.post("/move_servo", JSON.stringify({
+                            "servo": 2,
+                            "angle": armAngle
+                        });
+                    });
+                });
+            });
+
+            // Get the video stream from the camera
+            const video = document.getElementById('video');
+
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then((stream) => {
+                    video.srcObject = stream;
+                })
+                .catch((error) => {
+                    console.error('Error accessing the camera:', error);
+                });
+        });
+    </script>
+</body>
+</html>
